@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://babadepapel.com.br/sitemap.xml

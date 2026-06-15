@@ -901,12 +901,33 @@ src="https://www.facebook.com/tr?id=1016831947471937&ev=PageView&noscript=1"/></
     if(gatilhoModal){ gatilhoModal.focus(); gatilhoModal = null; }
   }
 
+  // Vai DIRETO pro checkout (sem modal de e-mail = menos atrito).
+  // Mantém InitiateCheckout + advanced matching (e-mail salvo, se houver)
+  // + passthrough de campanha. A Hotmart coleta o e-mail no checkout e
+  // a CAPI dela casa a Compra de qualquer forma.
+  function irParaCheckout(){
+    var email = '';
+    try{ email = (localStorage.getItem('bp_email') || '').trim().toLowerCase(); }catch(_){}
+    if(window.fbq){
+      if(email) fbq('init', window.META_PIXEL_ID, {em: email});
+      fbq('track', 'InitiateCheckout');
+    }
+    var url;
+    try{ url = new URL(CHECKOUT_URL); }catch(_){ window.location.href = CHECKOUT_URL; return; }
+    if(email) url.searchParams.set('email', email);
+    new URLSearchParams(window.location.search).forEach(function(v, k){
+      if(/^(utm_|fbclid|gclid|ttclid|sck|src|xcod)/.test(k) && !url.searchParams.has(k)){
+        url.searchParams.set(k, v);
+      }
+    });
+    window.location.href = url.toString();
+  }
   if(CHECKOUT_URL){
     document.querySelectorAll('a[data-checkout]').forEach(function(a){
       a.href = CHECKOUT_URL;
       a.addEventListener('click', function(e){
         e.preventDefault();
-        abrirModal(a);
+        irParaCheckout();
       });
     });
   }
